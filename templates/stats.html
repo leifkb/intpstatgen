@@ -26,7 +26,7 @@ html {
 </style>
 <h1>INTP stats! </h1>
 <p>Last updated: {{ last_updated }} &bull; Message count: {{ msg_count }} &bull; Sauce: <a href="https://github.com/leifkb/intpstatgen">GitHub</a></p>
-<p><strong>Info:</strong> These stats count an uninterrupted sequence of messages from the same author as a single message. All dates/times are UTC.</p> 
+<p><strong>Info:</strong> All dates/times are UTC. These stats count an uninterrupted sequence of messages from the same author as a single message. Someone is considered "active" on a given day if they send at least one message that day.</p> 
 <div id="msgchart">
 <h2>Messages and active people over time</h2>
 <div class="chart"></div>
@@ -52,6 +52,7 @@ html {
 </div>
 <div id="userchart">
 <h2>Messages by author</h2>
+<p>Mouseover a name in the legend to highlight its graph, or click to hide its graph.</p>
 <div class="chart"></div>
 </div>
 <div id="wordspermsg">
@@ -72,6 +73,10 @@ html {
 </div>
 <div id="hellos">
 <h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
+<div class="chart"></div>
+</div>
+<div id="activedays">
+<h2>Total days of activity</h2>
 <div class="chart"></div>
 </div>
 <div id="love">
@@ -96,6 +101,10 @@ html {
 </div>
 <div id="shit">
 <h2>Top "shit" sayers</h2>
+<div class="chart"></div>
+</div>
+<div id="laughers">
+<h2>Top laughers</h2>
 <div class="chart"></div>
 </div>
 <script>
@@ -353,6 +362,42 @@ c3.generate({
         y: {
             lines: [{value: {{ edited_overall }}, text: 'Overall average = {{ "%0.2f%%"|format(edited_overall) }}'}]
         }
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#activedays .chart',
+    data: {
+        columns: [
+            {% for author, days in active_days_by_author %}
+            [{{ author|tojson }}, {{ days }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Total days']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#laughers .chart',
+    data: {
+        columns: [
+            {% for author, msgs in laughers %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
     },
     interaction: {enabled: !is_mobile}
 });

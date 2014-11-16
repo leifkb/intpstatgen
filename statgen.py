@@ -201,16 +201,16 @@ def common_words(msgs, n=50):
         for word in msg.message.split():
             word = word.lower()
             words[word] = words.get(word, 0) + 1
-    return sorted(words.iteritems(), key=lambda (k, v): v, reverse=True)[:n]
+    return rank_dict(words)[:n]
 
 def words_following_hello(msgs):
     words = {}
     for msg in msgs:
-        m = re.search(ur"^.{,6}\b(?:hello|hey|hi+|greetings|morning),?\s+([a-z0-9'-]+).{,4}$", msg.message, re.I)
+        m = re.search(ur"^.{,6}\b(?:hello|hey|ha?i+|greetings|morning),?\s+([a-z0-9'-]+).{,4}$", msg.message, re.I)
         if m:
             word = m.group(1).lower()
             words[word] = words.get(word, 0) + 1
-    return sorted(words.iteritems(), key=lambda (k, v): v, reverse=True)
+    return rank_dict(words)
 
 def msgs_matching(msgs, pattern):
     result = {}
@@ -228,7 +228,7 @@ def msgs_matching(msgs, pattern):
     return result
 
 def top_msgs_matching(msgs, pattern, n=15):
-    return sorted(msgs_matching(msgs, pattern).iteritems(), key=lambda (k,v): v, reverse=True)[:n]
+    return rank_dict(msgs_matching(msgs, pattern))[:n]
 
 def edit_percentages(msgs):
     msg_counts = {}
@@ -252,16 +252,36 @@ def edit_percentages(msgs):
         result[author] = 100 * float(edited.get(author, 0)) / msg_count
     return result
 
+def active_days_by_author(msgs):
+    result = {}
+    last_author = None
+    last_day = None
+    for msg in msgs:
+        if last_author == msg.author:
+            continue
+        last_author = msg.author
+        day = msg.timestamp.date()
+        if day != last_day:
+            last_day = day
+            day_active = set()
+        if msg.author not in day_active:
+            day_active.add(msg.author)
+            result[msg.author] = result.get(msg.author, 0) + 1
+    return result
+
+def rank_dict(d):
+    return sorted(d.iteritems(), key=lambda (k, v): v, reverse=True)
+
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
-    top_authors = sorted(by_author.iteritems(), key=lambda (k, v): v, reverse=True)[:10]
+    top_authors = rank_dict(by_author)[:10]
     wpm = words_per_msg(msgs)
     wpm_overall = wpm[None]
-    wpm = sorted(only_top_authors(wpm, by_author).iteritems(), key=lambda (k, v): v, reverse=True)
+    wpm = rank_dict(only_top_authors(wpm, by_author))
     edited = edit_percentages(msgs)
     edited_overall = edited[None]
-    edited = sorted(only_top_authors(edited, by_author).iteritems(), key=lambda (k, v): v, reverse=True)
+    edited = rank_dict(only_top_authors(edited, by_author))
     return template_env.get_template('stats.html').render(
         top_authors=top_authors,
         date_labels=date_labels(msgs),
@@ -282,7 +302,9 @@ def generate_page():
         fuck=top_msgs_matching(msgs, re.compile(ur'fuck', re.I)),
         shit=top_msgs_matching(msgs, re.compile(ur'shit', re.I)),
         edited=edited,
-        edited_overall=edited_overall
+        edited_overall=edited_overall,
+        active_days_by_author=rank_dict(active_days_by_author(msgs))[:20],
+        laughers=top_msgs_matching(msgs, re.compile(ur'\blol([lo]*)\b|\bha[ah]*\b|\brofl\b', re.I))
     )
 
 if __name__ == '__main__':
