@@ -430,7 +430,7 @@ c3.generate({
     grid: {
         focus: {show: false},
         y: {
-            lines: [{value: {{ edited_overall }}, text: 'Overall average = {{ "%0.2f%%"|format(percent_uppercase_overall) }}'}]
+            lines: [{value: {{ percent_uppercase_overall }}, text: 'Overall average = {{ "%0.2f%%"|format(percent_uppercase_overall) }}'}]
         }
     },
     interaction: {enabled: !is_mobile}
