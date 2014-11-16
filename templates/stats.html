@@ -41,20 +41,20 @@ html {
 <h2>Total messages by hour</h2>
 <div class="chart"></div>
 </div>
-<div id="edited">
-<h2>Percent messages edited</h2>
-<div class="chart"></div>
-</div>
-<div id="hellos">
-<h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
-<div class="chart"></div>
-</div>
 <div id="msgsbyauthor">
 <h2>Total msgs by author</h2>
 <div class="chart"></div>
 </div>
 <div id="activedays">
 <h2>Total days of activity</h2>
+<div class="chart"></div>
+</div>
+<div id="edited">
+<h2>Percent messages edited</h2>
+<div class="chart"></div>
+</div>
+<div id="hellos">
+<h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
 <div class="chart"></div>
 </div>
 <div id="love">
@@ -354,7 +354,7 @@ c3.generate({
         type: 'bar'
     },
     axis: {
-        x: {type: 'category', show: false, categories: ['Total days']}
+        x: {type: 'category', show: false, categories: ['Total msgs']}
     },
     grid: {
         focus: {show: false}
