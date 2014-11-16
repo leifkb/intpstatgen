@@ -17,7 +17,7 @@ CHAT_NAME = '19:78317a8dceb646ff9d62ea2e31b4decb@thread.skype'
 NEOCITIES_USERNAME = 'intpstats'
 NEOCITIES_PASSWORD = sys.argv[1] if len(sys.argv) > 1 else None
 URL = 'http://intpstats.neocities.org'
-SkypeMessage = namedtuple('SkypeMessage', 'timestamp author message'.split())
+SkypeMessage = namedtuple('SkypeMessage', 'timestamp author message edited'.split())
 
 template_env = jinja2.Environment(loader=jinja2.PackageLoader('intpstatgen', 'templates'))
 template_env.filters['tojson'] = json.dumps
@@ -41,10 +41,10 @@ def read_msgs():
 
     with open_db() as db:
         cur = db.cursor()
-        cur.execute('SELECT timestamp, author, body_xml FROM messages WHERE chatname=? ORDER BY timestamp ASC', [CHAT_NAME])
-        for timestamp, author, body in cur:
+        cur.execute('SELECT timestamp, author, body_xml, edited_timestamp FROM messages WHERE chatname=? ORDER BY timestamp ASC', [CHAT_NAME])
+        for timestamp, author, body, edit_timestamp in cur:
             if body:
-                result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, extract_xml_text(body)))
+                result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, extract_xml_text(body), bool(edit_timestamp)))
 
     return result
 
@@ -110,10 +110,10 @@ def msgs_by_author(msgs):
         result[msg.author] = result.get(msg.author, 0) + 1
     return result
 
-def only_top_authors(d, by_author, n=20, include_none=True):
+def only_top_authors(d, by_author, n=15):
     top = set(k for k, v in sorted(by_author.iteritems(), key=lambda (k,v): v)[-n:])
     for k in d.keys():
-        if (not include_none or k is not None) and k not in top:
+        if k not in top:
             del d[k]
     return d
 
@@ -227,16 +227,41 @@ def msgs_matching(msgs, pattern):
             last_counted = True
     return result
 
-def top_msgs_matching(msgs, pattern, n=15):
+def top_msgs_matching(msgs, pattern, n=20):
     return sorted(msgs_matching(msgs, pattern).iteritems(), key=lambda (k,v): v, reverse=True)[:n]
+
+def edit_percentages(msgs):
+    msg_counts = {}
+    edited = {}
+    last_author = None
+    last_counted = False
+    for msg in msgs:
+        if last_author != msg.author:
+            last_author = msg.author
+            msg_counts[msg.author] = msg_counts.get(msg.author, 0) + 1
+            msg_counts[None] = msg_counts.get(None, 0) + 1
+            last_counted = False
+        if last_counted:
+            continue
+        if msg.edited:
+            last_counted = True
+            edited[msg.author] = edited.get(msg.author, 0) + 1
+            edited[None] = edited.get(None, 0) + 1
+    result = {}
+    for author, msg_count in msg_counts.iteritems():
+        result[author] = 100 * float(edited.get(author, 0)) / msg_count
+    return result
 
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
     top_authors = sorted(by_author.iteritems(), key=lambda (k, v): v, reverse=True)[:10]
-    wpm = only_top_authors(words_per_msg(msgs), by_author)
+    wpm = words_per_msg(msgs)
     wpm_overall = wpm[None]
-    wpm = sorted(wpm.iteritems(), key=lambda (k, v): v, reverse=True)
+    wpm = sorted(only_top_authors(wpm, by_author).iteritems(), key=lambda (k, v): v, reverse=True)
+    edited = edit_percentages(msgs)
+    edited_overall = edited[None]
+    edited = sorted(only_top_authors(edited, by_author).iteritems(), key=lambda (k, v): v, reverse=True)
     return template_env.get_template('stats.html').render(
         top_authors=top_authors,
         date_labels=date_labels(msgs),
@@ -253,7 +278,11 @@ def generate_page():
         love=top_msgs_matching(msgs, re.compile(ur'\b(love|loving)', re.I)),
         hate=top_msgs_matching(msgs, re.compile(ur'\b(hate|hatred|hating)', re.I)),
         penis=top_msgs_matching(msgs, re.compile(ur'\b(cock|dick|penis|wang)', re.I)),
-        boobs=top_msgs_matching(msgs, re.compile(ur'\b(tit|boob|breast)', re.I))
+        boobs=top_msgs_matching(msgs, re.compile(ur'\b(tit|boob|breast)', re.I)),
+        fuck=top_msgs_matching(msgs, re.compile(ur'fuck', re.I)),
+        shit=top_msgs_matching(msgs, re.compile(ur'shit', re.I)),
+        edited=edited,
+        edited_overall=edited_overall
     )
 
 if __name__ == '__main__':
