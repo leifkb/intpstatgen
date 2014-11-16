@@ -101,27 +101,6 @@ var msgs_by_day = {{ msgs_by_day|tojson }};
 var authors_by_day = {{ authors_by_day|tojson }};
 var is_mobile = /mobile|kindle|silk\/|symbian|nokia|android|nintendobrowser/i.test(navigator.userAgent);
 c3.generate({
-    bindto: '#userchart .chart',
-    data: {
-        x: 'x',
-        columns: [
-            ['x'].concat(date_labels),
-        {% for author, series in msgs_by_author_by_day.iteritems() %}
-        [{{ author|tojson }}].concat({{ series|tojson }}),
-        {% endfor %}
-        ]
-    },
-    axis: {
-        x: {
-            type: 'timeseries',
-            tick: {
-                format: '%Y-%m-%d'
-            }
-        }
-    },
-    interaction: {enabled: !is_mobile}
-});
-c3.generate({
     bindto: '#msgchart .chart',
     data: {
         x: 'x',
@@ -146,22 +125,22 @@ c3.generate({
     interaction: {enabled: !is_mobile}
 });
 c3.generate({
-    bindto: '#wordspermsg .chart',
+    bindto: '#userchart .chart',
     data: {
+        x: 'x',
         columns: [
-            {% for author, words in words_per_msg %}
-            [{{ author|tojson }}, {{ '%0.4f'|format(words) }}],
-            {% endfor %}
-        ],
-        type: 'bar'
+            ['x'].concat(date_labels),
+        {% for author, series in msgs_by_author_by_day.iteritems() %}
+        [{{ author|tojson }}].concat({{ series|tojson }}),
+        {% endfor %}
+        ]
     },
     axis: {
-        x: {type: 'category', show: false, categories: ['Words per msg']}
-    },
-    grid: {
-        focus: {show: false},
-        y: {
-            lines: [{value: {{ overall_words_per_msg }}, text: 'Overall average = {{ "%0.4f"|format(overall_words_per_msg) }}'}]
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%Y-%m-%d'
+            }
         }
     },
     interaction: {enabled: !is_mobile}
@@ -180,21 +159,40 @@ c3.generate({
     interaction: {enabled: !is_mobile}
 });
 c3.generate({
-    bindto: '#hours .chart',
+    bindto: '#msgsbyauthor .chart',
     data: {
-        x: 'x',
         columns: [
-            ['x'
-                {%- for hour in range(24) -%}
-                , {{ hour }}
-                {%- endfor -%}
-            ],
-            ['Msgs'].concat({{ hours|tojson }})
-        ]
+            {% for author, days in top_authors %}
+            [{{ author|tojson }}, {{ days }}],
+            {% endfor %}
+        ],
+        type: 'bar'
     },
     axis: {
-        x: {
-            tick: {format: function(hour) { return hour + ':00'; }}
+        x: {type: 'category', show: false, categories: ['Total msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#wordspermsg .chart',
+    data: {
+        columns: [
+            {% for author, words in words_per_msg %}
+            [{{ author|tojson }}, {{ '%0.4f'|format(words) }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Words per msg']}
+    },
+    grid: {
+        focus: {show: false},
+        y: {
+            lines: [{value: {{ overall_words_per_msg }}, text: 'Overall average = {{ "%0.4f"|format(overall_words_per_msg) }}'}]
         }
     },
     interaction: {enabled: !is_mobile}
@@ -236,46 +234,10 @@ c3.generate({
     interaction: {enabled: !is_mobile}
 });
 c3.generate({
-    bindto: '#hate .chart',
-    data: {
-        columns: [
-            {% for author, msgs in hate %}
-            [{{ author|tojson }}, {{ msgs }}],
-            {% endfor %}
-        ],
-        type: 'bar'
-    },
-    axis: {
-        x: {type: 'category', show: false, categories: ['Msgs']}
-    },
-    grid: {
-        focus: {show: false}
-    },
-    interaction: {enabled: !is_mobile}
-});
-c3.generate({
     bindto: '#penis .chart',
     data: {
         columns: [
             {% for author, msgs in penis %}
-            [{{ author|tojson }}, {{ msgs }}],
-            {% endfor %}
-        ],
-        type: 'bar'
-    },
-    axis: {
-        x: {type: 'category', show: false, categories: ['Msgs']}
-    },
-    grid: {
-        focus: {show: false}
-    },
-    interaction: {enabled: !is_mobile}
-});
-c3.generate({
-    bindto: '#boobs .chart',
-    data: {
-        columns: [
-            {% for author, msgs in boobs %}
             [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],
@@ -308,10 +270,10 @@ c3.generate({
     interaction: {enabled: !is_mobile}
 });
 c3.generate({
-    bindto: '#shit .chart',
+    bindto: '#laughers .chart',
     data: {
         columns: [
-            {% for author, msgs in shit %}
+            {% for author, msgs in laughers %}
             [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],
@@ -319,6 +281,44 @@ c3.generate({
     },
     axis: {
         x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#hours .chart',
+    data: {
+        x: 'x',
+        columns: [
+            ['x'
+                {%- for hour in range(24) -%}
+                , {{ hour }}
+                {%- endfor -%}
+            ],
+            ['Msgs'].concat({{ hours|tojson }})
+        ]
+    },
+    axis: {
+        x: {
+            tick: {format: function(hour) { return hour + ':00'; }}
+        }
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#activedays .chart',
+    data: {
+        columns: [
+            {% for author, days in active_days_by_author %}
+            [{{ author|tojson }}, {{ days }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Total days']}
     },
     grid: {
         focus: {show: false}
@@ -354,60 +354,6 @@ c3.generate({
     interaction: {enabled: !is_mobile}
 });
 c3.generate({
-    bindto: '#msgsbyauthor .chart',
-    data: {
-        columns: [
-            {% for author, days in top_authors %}
-            [{{ author|tojson }}, {{ days }}],
-            {% endfor %}
-        ],
-        type: 'bar'
-    },
-    axis: {
-        x: {type: 'category', show: false, categories: ['Total msgs']}
-    },
-    grid: {
-        focus: {show: false}
-    },
-    interaction: {enabled: !is_mobile}
-});
-c3.generate({
-    bindto: '#activedays .chart',
-    data: {
-        columns: [
-            {% for author, days in active_days_by_author %}
-            [{{ author|tojson }}, {{ days }}],
-            {% endfor %}
-        ],
-        type: 'bar'
-    },
-    axis: {
-        x: {type: 'category', show: false, categories: ['Total days']}
-    },
-    grid: {
-        focus: {show: false}
-    },
-    interaction: {enabled: !is_mobile}
-});
-c3.generate({
-    bindto: '#laughers .chart',
-    data: {
-        columns: [
-            {% for author, msgs in laughers %}
-            [{{ author|tojson }}, {{ msgs }}],
-            {% endfor %}
-        ],
-        type: 'bar'
-    },
-    axis: {
-        x: {type: 'category', show: false, categories: ['Msgs']}
-    },
-    grid: {
-        focus: {show: false}
-    },
-    interaction: {enabled: !is_mobile}
-});
-c3.generate({
     bindto: '#percent_uppercase .chart',
     data: {
         columns: [
@@ -432,6 +378,60 @@ c3.generate({
         y: {
             lines: [{value: {{ percent_uppercase_overall }}, text: 'Overall average = {{ "%0.2f%%"|format(percent_uppercase_overall) }}'}]
         }
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#hate .chart',
+    data: {
+        columns: [
+            {% for author, msgs in hate %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#boobs .chart',
+    data: {
+        columns: [
+            {% for author, msgs in boobs %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#shit .chart',
+    data: {
+        columns: [
+            {% for author, msgs in shit %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
     },
     interaction: {enabled: !is_mobile}
 });
