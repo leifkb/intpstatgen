@@ -212,6 +212,21 @@ def words_following_hello(msgs):
             words[word] = words.get(word, 0) + 1
     return sorted(words.iteritems(), key=lambda (k, v): v, reverse=True)
 
+def msgs_matching(msgs, pattern):
+    result = {}
+    last_author = None
+    last_counted = False
+    for msg in msgs:
+        if last_author != msg.author:
+            last_author = msg.author
+            last_counted = False
+        if last_counted:
+            continue
+        if pattern.search(msg.message):
+            result[msg.author] = result.get(msg.author, 0) + 1
+            last_counted = True
+    return result
+
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
@@ -232,6 +247,7 @@ def generate_page():
         days_of_week=messages_by_day_of_week(msgs),
         hours=messages_by_hour(msgs),
         hellos=words_following_hello(msgs)[:20],
+        love=sorted(msgs_matching(msgs, re.compile(ur'\b(love|loving)', re.I)).iteritems(), key=lambda (k, v): v, reverse=True)[:20]
     )
 
 if __name__ == '__main__':

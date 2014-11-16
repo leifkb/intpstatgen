@@ -65,6 +65,10 @@
 <h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
 <div class="chart"></div>
 </div>
+<div id="love">
+<h2>Top lovers (msgs mentioning love)</h2>
+<div class="chart"></div>
+</div>
 <script>
 var date_labels = {{ date_labels|tojson }};
 var msgs_by_day = {{ msgs_by_day|tojson }};
@@ -171,6 +175,23 @@ c3.generate({
         columns: [
             {% for word, msgs in hellos %}
             [{{ word|tojson }}, {{ msgs|tojson }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+});
+c3.generate({
+    bindto: '#love .chart',
+    data: {
+        columns: [
+            {% for author, msgs in words_per_msg %}
+            [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],
         type: 'bar'
