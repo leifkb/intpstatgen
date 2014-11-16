@@ -9,12 +9,11 @@ html {
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
 }
-#daysofweek, #love, #penis, #fuck, #msgsbyauthor {
+.col1 {
     width: 50%;
     float: left;
-    clear: left;
 }
-#hours, #hate, #boobs, #shit, #activedays {
+.col2 {
     margin-left: 50%;
 }
 </style>
@@ -30,66 +29,72 @@ html {
 <p>Mouseover a name in the legend to highlight its graph, or click to hide its graph.</p>
 <div class="chart"></div>
 </div>
+<div class="col1">
 <div id="daysofweek">
 <h2>Total messages by day of week</h2>
-<div class="chart"></div>
-</div>
-<div id="hours">
-<h2>Total messages by hour</h2>
 <div class="chart"></div>
 </div>
 <div id="msgsbyauthor">
 <h2>Total msgs by author</h2>
 <div class="chart"></div>
 </div>
-<div id="activedays">
-<h2>Total days of activity</h2>
-<div class="chart"></div>
-</div>
 <div id="wordspermsg">
 <h2>Average words per message</h2>
-<div class="chart"></div>
-</div>
-<div id="edited">
-<h2>Percent messages edited</h2>
 <div class="chart"></div>
 </div>
 <div id="hellos">
 <h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
 <div class="chart"></div>
 </div>
-<div id="percent_uppercase">
-<h2>Percent letters uppercase</h2>
-<div class="chart"></div>
-</div>
 <div id="love">
 <h2>Top lovers (msgs mentioning love)</h2>
-<div class="chart"></div>
-</div>
-<div id="hate">
-<h2>Top haters (msgs mentioning hate)</h2>
 <div class="chart"></div>
 </div>
 <div id="penis">
 <h2>Top penis mentioners</h2>
 <div class="chart"></div>
 </div>
-<div id="boobs">
-<h2>Top female anatomy mentioners</h2>
-<div class="chart"></div>
-</div>
 <div id="fuck">
 <h2>Top "fuck" sayers</h2>
-<div class="chart"></div>
-</div>
-<div id="shit">
-<h2>Top "shit" sayers</h2>
 <div class="chart"></div>
 </div>
 <div id="laughers">
 <h2>Top laughers</h2>
 <div class="chart"></div>
 </div>
+</div>
+
+<div class="col2">
+<div id="hours">
+<h2>Total messages by hour</h2>
+<div class="chart"></div>
+</div>
+<div id="activedays">
+<h2>Total days of activity</h2>
+<div class="chart"></div>
+</div>
+<div id="edited">
+<h2>Percent messages edited</h2>
+<div class="chart"></div>
+</div>
+<div id="percent_uppercase">
+<h2>Percent letters uppercase</h2>
+<div class="chart"></div>
+</div>
+<div id="hate">
+<h2>Top haters (msgs mentioning hate)</h2>
+<div class="chart"></div>
+</div>
+<div id="boobs">
+<h2>Top female anatomy mentioners</h2>
+<div class="chart"></div>
+</div>
+<div id="shit">
+<h2>Top "shit" sayers</h2>
+<div class="chart"></div>
+</div>
+</div>
+
 <script>
 var date_labels = {{ date_labels|tojson }};
 var msgs_by_day = {{ msgs_by_day|tojson }};
