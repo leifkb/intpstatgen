@@ -190,7 +190,7 @@ c3.generate({
     bindto: '#love .chart',
     data: {
         columns: [
-            {% for author, msgs in words_per_msg %}
+            {% for author, msgs in love %}
             [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],
