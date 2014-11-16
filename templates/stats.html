@@ -9,18 +9,11 @@ html {
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
 }
-#topusers {
-    float: right;
-    width: 15em;
-}
-#userchart {
-    margin-right: 15em;
-}
-#daysofweek, #love, #penis, #fuck {
+#daysofweek, #love, #penis, #fuck, #msgsbyauthor {
     width: 50%;
     float: left;
 }
-#hours, #hate, #boobs, #shit {
+#hours, #hate, #boobs, #shit, #activedays {
     margin-left: 50%;
 }
 </style>
@@ -30,25 +23,6 @@ html {
 <div id="msgchart">
 <h2>Messages and active people over time</h2>
 <div class="chart"></div>
-</div>
-<div id="topusers">
-<h2>Top authors</h2>
-<table>
-<thead>
-<th></th>
-<th>Name</th>
-<th>Msgs</th>
-</thead>
-<tbody>
-{% for author, msgs in top_authors %}
-<tr>
-<td>#{{ loop.index }}</td>
-<td>{{ author }}</td>
-<td>{{ msgs }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
 </div>
 <div id="userchart">
 <h2>Messages by author</h2>
@@ -73,6 +47,10 @@ html {
 </div>
 <div id="hellos">
 <h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
+<div class="chart"></div>
+</div>
+<div id="msgsbyauthor">
+<h2>Total msgs by author</h2>
 <div class="chart"></div>
 </div>
 <div id="activedays">
@@ -362,6 +340,24 @@ c3.generate({
         y: {
             lines: [{value: {{ edited_overall }}, text: 'Overall average = {{ "%0.2f%%"|format(edited_overall) }}'}]
         }
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#msgsbyauthor .chart',
+    data: {
+        columns: [
+            {% for author, days in top_authors %}
+            [{{ author|tojson }}, {{ days }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Total days']}
+    },
+    grid: {
+        focus: {show: false}
     },
     interaction: {enabled: !is_mobile}
 });
