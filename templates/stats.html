@@ -1,0 +1,164 @@
+<!doctype html>
+<title>INTP stats!</title>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/c3/0.4.0/c3.min.js"></script>
+<style>
+@import url(http://cdnjs.cloudflare.com/ajax/libs/c3/0.4.0/c3.min.css);
+#topusers {
+    float: right;
+    width: 15em;
+}
+#userchart {
+    margin-right: 15em;
+}
+#daysofweek {
+    width: 50%;
+    float: left;
+}
+#hours {
+    margin-left: 50%;
+}
+</style>
+<h1>INTP stats! </h1>
+<p>Last updated: {{ last_updated }} &bull; Message count: {{ msg_count }}</p>
+<p><strong>Info:</strong> These stats count an uninterrupted sequence of messages from the same author as a single message. All dates/times are UTC.</p> 
+<div id="msgchart">
+<h2>Messages and active people over time</h2>
+<div class="chart"></div>
+</div>
+<div id="topusers">
+<h2>Top authors</h2>
+<table>
+<thead>
+<th></th>
+<th>Name</th>
+<th>Msgs</th>
+</thead>
+<tbody>
+{% for author, msgs in top_authors %}
+<tr>
+<td>#{{ loop.index }}</td>
+<td>{{ author }}</td>
+<td>{{ msgs }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<div id="userchart">
+<h2>Messages by author</h2>
+<div class="chart"></div>
+</div>
+<div id="wordspermsg">
+<h2>Average words per message</h2>
+<div class="chart"></div>
+</div>
+<div id="daysofweek">
+<h2>Total messages by day of week</h2>
+<div class="chart"></div>
+</div>
+<div id="hours">
+<h2>Total messages by hour</h2>
+<div class="chart"></div>
+</div>
+<script>
+var date_labels = {{ date_labels|tojson }};
+var msgs_by_day = {{ msgs_by_day|tojson }};
+var authors_by_day = {{ authors_by_day|tojson }};
+c3.generate({
+	bindto: '#userchart .chart',
+    data: {
+        x: 'x',
+        columns: [
+            ['x'].concat(date_labels),
+        {% for author, series in msgs_by_author_by_day.iteritems() %}
+        [{{ author|tojson }}].concat({{ series|tojson }}),
+        {% endfor %}
+        ]
+    },
+    axis: {
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%Y-%m-%d'
+            }
+        }
+    }
+});
+c3.generate({
+    bindto: '#msgchart .chart',
+    data: {
+        x: 'x',
+        columns: [
+            ['x'].concat(date_labels),
+            ['Msgs'].concat(msgs_by_day),
+            ['Active people'].concat(authors_by_day)
+        ],
+        axes: {
+            'Active people': 'y2'
+        }
+    },
+    axis: {
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%Y-%m-%d'
+            }
+        },
+        y2: {show: true}
+    }
+});
+c3.generate({
+    bindto: '#wordspermsg .chart',
+    data: {
+        columns: [
+            {% for author, words in words_per_msg %}
+            {% if author != none %}
+            [{{ author|tojson }}, {{ '%0.4f'|format(words) }}],
+            {% endif %}
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Words per msg']}
+    },
+    grid: {
+        focus: {show: false},
+        y: {
+            lines: [{value: {{ overall_words_per_msg }}, text: 'Overall average = {{ "%0.4f"|format(overall_words_per_msg) }}'}]
+        }
+    },
+});
+c3.generate({
+    bindto: '#daysofweek .chart',
+    data: {
+        columns: [
+            ['Msgs'].concat({{ days_of_week|tojson }})
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', categories: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']}
+    }
+});
+c3.generate({
+    bindto: '#hours .chart',
+    data: {
+        x: 'x',
+        columns: [
+            ['x'
+                {%- for hour in range(24) -%}
+                , {{ hour }}
+                {%- endfor -%}
+            ],
+            ['Msgs'].concat({{ hours|tojson }})
+        ]
+    },
+    axis: {
+        x: {
+            tick: {format: function(hour) { return hour + ':00'; }}
+        }
+    }
+});
+</script>
