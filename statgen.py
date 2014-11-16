@@ -222,7 +222,7 @@ def generate_page():
     return template_env.get_template('stats.html').render(
         top_authors=top_authors,
         date_labels=date_labels(msgs),
-        last_updated=datetime.utcnow().date().isoformat(),
+        last_updated=datetime.utcnow().isoformat()[:19].replace('T', ' '),
         msg_count=count_msg_runs(msgs),
         msgs_by_day=msgs_by_day(msgs),
         authors_by_day=authors_by_day(msgs),
