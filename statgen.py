@@ -21,203 +21,203 @@ template_env = jinja2.Environment(loader=jinja2.PackageLoader('intpstatgen', 'te
 template_env.filters['tojson'] = json.dumps
 
 def open_db():
-	with NamedTemporaryFile(delete=False) as f:
-		shutil.copy(SKYPE_DB, f.name)
-		try:
-			db = sqlite3.connect(f.name)
-		finally:
-			os.unlink(f.name)
-		return db
+    with NamedTemporaryFile(delete=False) as f:
+        shutil.copy(SKYPE_DB, f.name)
+        try:
+            db = sqlite3.connect(f.name)
+        finally:
+            os.unlink(f.name)
+        return db
 
 def read_msgs():
-	result = []
+    result = []
 
-	with open_db() as db:
-		cur = db.cursor()
-		cur.execute('SELECT timestamp, author, body_xml FROM messages WHERE chatname=? ORDER BY timestamp ASC', [CHAT_NAME])
-		for timestamp, author, body in cur:
-			if body:
-				result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, body))
+    with open_db() as db:
+        cur = db.cursor()
+        cur.execute('SELECT timestamp, author, body_xml FROM messages WHERE chatname=? ORDER BY timestamp ASC', [CHAT_NAME])
+        for timestamp, author, body in cur:
+            if body:
+                result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, body))
 
-	return result
+    return result
 
 def count_msg_runs(msgs):
-	result = 0
-	last_author = None
+    result = 0
+    last_author = None
 
-	for msg in msgs:
-		if msg.author != last_author:
-			last_author = msg.author
-			result += 1
+    for msg in msgs:
+        if msg.author != last_author:
+            last_author = msg.author
+            result += 1
 
-	return result
+    return result
 
 def msgs_by_day(msgs):
-	result = []
-	last_author = None
-	last_day = None
-	for msg in msgs:
-		day = msg.timestamp.date()
-		while last_day is None or last_day < day:
-			result.append(0)
-			if last_day is None:
-				last_day = day
-			else:
-				last_day += timedelta(days=1)
-		if msg.author == last_author:
-			continue
-		last_author = msg.author
-		result[-1] += 1
-	return result
+    result = []
+    last_author = None
+    last_day = None
+    for msg in msgs:
+        day = msg.timestamp.date()
+        while last_day is None or last_day < day:
+            result.append(0)
+            if last_day is None:
+                last_day = day
+            else:
+                last_day += timedelta(days=1)
+        if msg.author == last_author:
+            continue
+        last_author = msg.author
+        result[-1] += 1
+    return result
 
 def msgs_by_author_by_day(msgs):
-	zeroes = []
-	authors = {}
-	last_author = None
-	last_day = None
-	for msg in msgs:
-		day = msg.timestamp.date()
-		while last_day is None or last_day < day:
-			zeroes.append(0)
-			for v in authors.itervalues():
-				v.append(0)
-			if last_day is None:
-				last_day = day
-			else:
-				last_day += timedelta(days=1)
-		if msg.author == last_author:
-			continue
-		last_author = msg.author
-		if msg.author not in authors:
-			authors[msg.author] = zeroes[:]
-		authors[msg.author][-1] += 1
-	return authors
+    zeroes = []
+    authors = {}
+    last_author = None
+    last_day = None
+    for msg in msgs:
+        day = msg.timestamp.date()
+        while last_day is None or last_day < day:
+            zeroes.append(0)
+            for v in authors.itervalues():
+                v.append(0)
+            if last_day is None:
+                last_day = day
+            else:
+                last_day += timedelta(days=1)
+        if msg.author == last_author:
+            continue
+        last_author = msg.author
+        if msg.author not in authors:
+            authors[msg.author] = zeroes[:]
+        authors[msg.author][-1] += 1
+    return authors
 
 def msgs_by_author(msgs):
-	result = {}
-	last_author = None
-	for msg in msgs:
-		if last_author == msg.author:
-			continue
-		last_author = msg.author
-		result[msg.author] = result.get(msg.author, 0) + 1
-	return result
+    result = {}
+    last_author = None
+    for msg in msgs:
+        if last_author == msg.author:
+            continue
+        last_author = msg.author
+        result[msg.author] = result.get(msg.author, 0) + 1
+    return result
 
 def only_top_authors(d, by_author, n=20, include_none=True):
-	top = set(k for k, v in sorted(by_author.iteritems(), key=lambda (k,v): v)[-n:])
-	for k in d.keys():
-		if (not include_none or k is not None) and k not in top:
-			del d[k]
-	return d
+    top = set(k for k, v in sorted(by_author.iteritems(), key=lambda (k,v): v)[-n:])
+    for k in d.keys():
+        if (not include_none or k is not None) and k not in top:
+            del d[k]
+    return d
 
 def date_labels(msgs):
-	result = []
-	start_date = msgs[0].timestamp.date()
-	end_date = msgs[-1].timestamp.date()
-	date = start_date
-	while date <= end_date:
-		result.append(date.isoformat())
-		date += timedelta(days=1)
-	return result
+    result = []
+    start_date = msgs[0].timestamp.date()
+    end_date = msgs[-1].timestamp.date()
+    date = start_date
+    while date <= end_date:
+        result.append(date.isoformat())
+        date += timedelta(days=1)
+    return result
 
 def words_by_day(msgs):
-	result = []
-	last_day = None
-	for msg in msgs:
-		day = msg.timestamp.date()
-		while last_day is None or last_day < day:
-			result.append(0)
-			if last_day is None:
-				last_day = day
-			else:
-				last_day += timedelta(days=1)
-		result[-1] += len(msg.message.split())
-	return result
+    result = []
+    last_day = None
+    for msg in msgs:
+        day = msg.timestamp.date()
+        while last_day is None or last_day < day:
+            result.append(0)
+            if last_day is None:
+                last_day = day
+            else:
+                last_day += timedelta(days=1)
+        result[-1] += len(msg.message.split())
+    return result
 
 def authors_by_day(msgs):
-	result = []
-	last_day = None
-	for msg in msgs:
-		day = msg.timestamp.date()
-		while last_day is None or last_day < day:
-			result.append(0)
-			last_authors = set()
-			if last_day is None:
-				last_day = day
-			else:
-				last_day += timedelta(days=1)
-		if msg.author not in last_authors:
-			result[-1] += 1
-			last_authors.add(msg.author)
-	return result
+    result = []
+    last_day = None
+    for msg in msgs:
+        day = msg.timestamp.date()
+        while last_day is None or last_day < day:
+            result.append(0)
+            last_authors = set()
+            if last_day is None:
+                last_day = day
+            else:
+                last_day += timedelta(days=1)
+        if msg.author not in last_authors:
+            result[-1] += 1
+            last_authors.add(msg.author)
+    return result
 
 def words_per_msg(msgs):
-	word_counts = {}
-	msg_counts = {}
-	last_author = None
-	for msg in msgs:
-		if last_author != msg.author:
-			last_author = msg.author
-			msg_counts[msg.author] = msg_counts.get(msg.author, 0) + 1
-			msg_counts[None] = msg_counts.get(None, 0) + 1
-		word_count = len(msg.message.split())
-		word_counts[msg.author] = word_counts.get(msg.author, 0) + word_count
-		word_counts[None] = word_counts.get(None, 0) + word_count
-	result = {}
-	for author, msg_count in msg_counts.iteritems():
-		result[author] = word_counts.get(author, 0) / float(msg_count)
-	return result
+    word_counts = {}
+    msg_counts = {}
+    last_author = None
+    for msg in msgs:
+        if last_author != msg.author:
+            last_author = msg.author
+            msg_counts[msg.author] = msg_counts.get(msg.author, 0) + 1
+            msg_counts[None] = msg_counts.get(None, 0) + 1
+        word_count = len(msg.message.split())
+        word_counts[msg.author] = word_counts.get(msg.author, 0) + word_count
+        word_counts[None] = word_counts.get(None, 0) + word_count
+    result = {}
+    for author, msg_count in msg_counts.iteritems():
+        result[author] = word_counts.get(author, 0) / float(msg_count)
+    return result
 
 def messages_by_day_of_week(msgs):
-	days = [0] * 7
-	last_author = None
-	for msg in msgs:
-		if last_author == msg.author:
-			continue
-		last_author = msg.author
-		days[msg.timestamp.date().isoweekday() % 7] += 1
-	return days
+    days = [0] * 7
+    last_author = None
+    for msg in msgs:
+        if last_author == msg.author:
+            continue
+        last_author = msg.author
+        days[msg.timestamp.date().isoweekday() % 7] += 1
+    return days
 
 def messages_by_hour(msgs):
-	hours = [0] * 24
-	last_author = None
-	for msg in msgs:
-		if last_author == msg.author:
-			continue
-		last_author = msg.author
-		hours[msg.timestamp.hour] += 1
-	return hours
+    hours = [0] * 24
+    last_author = None
+    for msg in msgs:
+        if last_author == msg.author:
+            continue
+        last_author = msg.author
+        hours[msg.timestamp.hour] += 1
+    return hours
 
 def generate_page():
-	msgs = read_msgs()
-	by_author = msgs_by_author(msgs)
-	top_authors = sorted(by_author.iteritems(), key=lambda (k, v): v, reverse=True)[:10]
-	wpm = only_top_authors(words_per_msg(msgs), by_author)
-	wpm_overall = wpm[None]
-	wpm = sorted(wpm.iteritems(), key=lambda (k, v): v, reverse=True)
-	return template_env.get_template('stats.html').render(
-		top_authors=top_authors,
-		date_labels=date_labels(msgs),
-		last_updated=datetime.utcnow().date().isoformat(),
-		msg_count=count_msg_runs(msgs),
-		msgs_by_day=msgs_by_day(msgs),
-		authors_by_day=authors_by_day(msgs),
-		msgs_by_author_by_day=only_top_authors(msgs_by_author_by_day(msgs), by_author),
-		words_per_msg=wpm,
-		overall_words_per_msg=wpm_overall,
-		days_of_week=messages_by_day_of_week(msgs),
-		hours=messages_by_hour(msgs)
-	)
+    msgs = read_msgs()
+    by_author = msgs_by_author(msgs)
+    top_authors = sorted(by_author.iteritems(), key=lambda (k, v): v, reverse=True)[:10]
+    wpm = only_top_authors(words_per_msg(msgs), by_author)
+    wpm_overall = wpm[None]
+    wpm = sorted(wpm.iteritems(), key=lambda (k, v): v, reverse=True)
+    return template_env.get_template('stats.html').render(
+        top_authors=top_authors,
+        date_labels=date_labels(msgs),
+        last_updated=datetime.utcnow().date().isoformat(),
+        msg_count=count_msg_runs(msgs),
+        msgs_by_day=msgs_by_day(msgs),
+        authors_by_day=authors_by_day(msgs),
+        msgs_by_author_by_day=only_top_authors(msgs_by_author_by_day(msgs), by_author),
+        words_per_msg=wpm,
+        overall_words_per_msg=wpm_overall,
+        days_of_week=messages_by_day_of_week(msgs),
+        hours=messages_by_hour(msgs)
+    )
 
 if __name__ == '__main__':
-	page = generate_page()
-	if NEOCITIES_PASSWORD is not None:
-		f = StringIO(page)
-		requests.post('https://neocities.org/api/upload', auth=(NEOCITIES_USERNAME, NEOCITIES_PASSWORD), files={'index.html': f})
-		url = URL
-	else:
-		with open('/tmp/intp.html', 'w') as f:
-			f.write(page)
-		url = 'file:///tmp/intp.html'
-	import webbrowser
-	webbrowser.open(url)
+    page = generate_page()
+    if NEOCITIES_PASSWORD is not None:
+        f = StringIO(page)
+        requests.post('https://neocities.org/api/upload', auth=(NEOCITIES_USERNAME, NEOCITIES_PASSWORD), files={'index.html': f})
+        url = URL
+    else:
+        with open('/tmp/intp.html', 'w') as f:
+            f.write(page)
+        url = 'file:///tmp/intp.html'
+    import webbrowser
+    webbrowser.open(url)
