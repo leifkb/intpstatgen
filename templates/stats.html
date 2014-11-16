@@ -11,11 +11,11 @@
 #userchart {
     margin-right: 15em;
 }
-#daysofweek, #love {
+#daysofweek, #love, #penis {
     width: 50%;
     float: left;
 }
-#hours, #hate {
+#hours, #hate, #boobs {
     margin-left: 50%;
 }
 </style>
@@ -75,6 +75,10 @@
 </div>
 <div id="penis">
 <h2>Top penis mentioners</h2>
+<div class="chart"></div>
+</div>
+<div id="boobs">
+<h2>Top boob mentioners</h2>
 <div class="chart"></div>
 </div>
 <script>
@@ -233,6 +237,23 @@ c3.generate({
     data: {
         columns: [
             {% for author, msgs in penis %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+});
+c3.generate({
+    bindto: '#boobs .chart',
+    data: {
+        columns: [
+            {% for author, msgs in boobs %}
             [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],

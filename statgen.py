@@ -227,7 +227,7 @@ def msgs_matching(msgs, pattern):
             last_counted = True
     return result
 
-def top_msgs_matching(msgs, pattern, n=20):
+def top_msgs_matching(msgs, pattern, n=15):
     return sorted(msgs_matching(msgs, pattern).iteritems(), key=lambda (k,v): v, reverse=True)[:n]
 
 def generate_page():
@@ -252,7 +252,8 @@ def generate_page():
         hellos=words_following_hello(msgs)[:20],
         love=top_msgs_matching(msgs, re.compile(ur'\b(love|loving)', re.I)),
         hate=top_msgs_matching(msgs, re.compile(ur'\b(hate|hatred|hating)', re.I)),
-        penis=top_msgs_matching(msgs, re.compile(ur'\b(cock|dick|penis|wang)', re.I))
+        penis=top_msgs_matching(msgs, re.compile(ur'\b(cock|dick|penis|wang)', re.I)),
+        boobs=top_msgs_matching(msgs, re.compile(ur'\b(tit|boob|breast)', re.I))
     )
 
 if __name__ == '__main__':
