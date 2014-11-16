@@ -9,7 +9,7 @@ import simplejson as json
 import requests
 from StringIO import StringIO
 import sys
-import xml.sax.handler
+from xml.sax.saxutils import unescape
 import re
 
 SKYPE_DB = '/Users/leif/Library/Application Support/Skype/eurleif/main.db'
@@ -22,17 +22,10 @@ SkypeMessage = namedtuple('SkypeMessage', 'timestamp author message'.split())
 template_env = jinja2.Environment(loader=jinja2.PackageLoader('intpstatgen', 'templates'))
 template_env.filters['tojson'] = json.dumps
 
-class TextExtractingContentHandler(xml.sax.handler.ContentHandler):
-    def __init__(self):
-        self.io = StringIO()
-
-    def characters(self, content):
-        self.io.write(content)
-
 def extract_xml_text(data):
-    handler = TextExtractingContentHandler()
-    xml.sax.parseString('<root>%s</root>' % data.encode('utf8'), handler)
-    return handler.io.getvalue()
+    data = re.sub(u'<[^>]+>', u'', data)
+    data = unescape(data, {u"&apos;": u"'", u"&quot;": u'"'})
+    return data
 
 def open_db():
     with NamedTemporaryFile(delete=False) as f:
@@ -213,7 +206,7 @@ def common_words(msgs, n=50):
 def words_following_hello(msgs):
     words = {}
     for msg in msgs:
-        m = re.search(ur"^.{,6}\b(?:hello|hey|hi+),?\s+([a-z0-9'-]+).{,4}$", msg.message, re.I)
+        m = re.search(ur"^.{,6}\b(?:hello|hey|hi+|greetings|morning),?\s+([a-z0-9'-]+).{,4}$", msg.message, re.I)
         if m:
             word = m.group(1).lower()
             words[word] = words.get(word, 0) + 1
@@ -226,7 +219,6 @@ def generate_page():
     wpm = only_top_authors(words_per_msg(msgs), by_author)
     wpm_overall = wpm[None]
     wpm = sorted(wpm.iteritems(), key=lambda (k, v): v, reverse=True)
-    print words_following_hello(msgs)
     return template_env.get_template('stats.html').render(
         top_authors=top_authors,
         date_labels=date_labels(msgs),
