@@ -318,7 +318,7 @@ def generate_page():
         love=top_msgs_matching(msgs, re.compile(ur'\b(love|loving)', re.I)),
         hate=top_msgs_matching(msgs, re.compile(ur'\b(hate|hatred|hating)', re.I)),
         penis=top_msgs_matching(msgs, re.compile(ur'\b(cock|dick|penis|wang|boner|dong)', re.I)),
-        boobs=top_msgs_matching(msgs, re.compile(ur'\b(tit|boob|breast)', re.I)),
+        boobs=top_msgs_matching(msgs, re.compile(ur'\b(tit|boob|breast|clit|pussy|vagina)', re.I)),
         fuck=top_msgs_matching(msgs, re.compile(ur'fuck', re.I)),
         shit=top_msgs_matching(msgs, re.compile(ur'shit', re.I)),
         edited=edited,
