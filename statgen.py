@@ -289,6 +289,24 @@ def percent_uppercase(msgs):
         result[author] = 100 * float(upper_counts.get(author, 0)) / letter_count
     return result
 
+def daily_minutes_of_silence(msgs):
+    result = []
+    last_day = None
+    last_minute = None
+    for msg in msgs:
+        day = msg.timestamp.date()
+        minute = msg.timestamp.replace(second=0, microsecond=0)
+        while last_day is None or last_day < day:
+            result.append(24*60)
+            if last_day is None:
+                last_day = day
+            else:
+                last_day += timedelta(days=1)
+        if minute != last_minute:
+            last_minute = minute
+            result[-1] -= 1
+    return result
+
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
@@ -326,7 +344,9 @@ def generate_page():
         active_days_by_author=rank_dict(active_days_by_author(msgs))[:15],
         laughers=top_msgs_matching(msgs, re.compile(ur'\blol([lo]*)\b|\bha[ah]*\b|\brofl\b', re.I)),
         percent_uppercase=pct_uppercase,
-        percent_uppercase_overall=pct_uppercase_overall
+        percent_uppercase_overall=pct_uppercase_overall,
+        nazis=top_msgs_matching(msgs, re.compile(ur'\bnazi|\bhitler|\bholocaust', re.I)),
+        minutes_of_silence=daily_minutes_of_silence(msgs)
     )
 
 if __name__ == '__main__':

@@ -29,6 +29,10 @@ html {
 <p>Mouseover a name in the legend to highlight its graph, or click to hide its graph.</p>
 <div class="chart"></div>
 </div>
+<div id="silence">
+<h2>Minutes of silence (no messages) per day</h2>
+<div class="chart"></div>
+</div>
 <div class="col1">
 <div id="daysofweek">
 <h2>Total messages by day of week</h2>
@@ -93,12 +97,17 @@ html {
 <h2>Top "shit" sayers</h2>
 <div class="chart"></div>
 </div>
+<div id="godwin">
+<h2>Top Godwin's Law violators</h2>
+<div class="chart"></div>
+</div>
 </div>
 
 <script>
 var date_labels = {{ date_labels|tojson }};
 var msgs_by_day = {{ msgs_by_day|tojson }};
 var authors_by_day = {{ authors_by_day|tojson }};
+var minutes_of_silence = {{ minutes_of_silence|tojson }};
 var is_mobile = /mobile|kindle|silk\/|symbian|nokia|android|nintendobrowser/i.test(navigator.userAgent);
 c3.generate({
     bindto: '#msgchart .chart',
@@ -133,6 +142,25 @@ c3.generate({
         {% for author, series in msgs_by_author_by_day.iteritems() %}
         [{{ author|tojson }}].concat({{ series|tojson }}),
         {% endfor %}
+        ]
+    },
+    axis: {
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%Y-%m-%d'
+            }
+        }
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#silence .chart',
+    data: {
+        x: 'x',
+        columns: [
+            ['x'].concat(date_labels),
+            ['Minutes'].concat(minutes_of_silence)
         ]
     },
     axis: {
@@ -422,6 +450,24 @@ c3.generate({
     data: {
         columns: [
             {% for author, msgs in shit %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#godwin .chart',
+    data: {
+        columns: [
+            {% for author, msgs in nazis %}
             [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],
