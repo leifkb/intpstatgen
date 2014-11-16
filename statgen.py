@@ -265,5 +265,5 @@ if __name__ == '__main__':
         with open('/tmp/intp.html', 'w') as f:
             f.write(page)
         url = 'file:///tmp/intp.html'
-    import webbrowser
-    webbrowser.open(url)
+        import webbrowser
+        webbrowser.open(url)
