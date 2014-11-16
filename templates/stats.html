@@ -11,11 +11,11 @@
 #userchart {
     margin-right: 15em;
 }
-#daysofweek {
+#daysofweek, #love {
     width: 50%;
     float: left;
 }
-#hours {
+#hours, #hate {
     margin-left: 50%;
 }
 </style>
@@ -67,6 +67,14 @@
 </div>
 <div id="love">
 <h2>Top lovers (msgs mentioning love)</h2>
+<div class="chart"></div>
+</div>
+<div id="hate">
+<h2>Top haters (msgs mentioning hate)</h2>
+<div class="chart"></div>
+</div>
+<div id="penis">
+<h2>Top penis mentioners</h2>
 <div class="chart"></div>
 </div>
 <script>
@@ -191,6 +199,40 @@ c3.generate({
     data: {
         columns: [
             {% for author, msgs in love %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+});
+c3.generate({
+    bindto: '#hate .chart',
+    data: {
+        columns: [
+            {% for author, msgs in hate %}
+            [{{ author|tojson }}, {{ msgs }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
+});
+c3.generate({
+    bindto: '#penis .chart',
+    data: {
+        columns: [
+            {% for author, msgs in penis %}
             [{{ author|tojson }}, {{ msgs }}],
             {% endfor %}
         ],
