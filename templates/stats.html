@@ -61,6 +61,10 @@
 <h2>Total messages by hour</h2>
 <div class="chart"></div>
 </div>
+<div id="hellos">
+<h2>People said hi/hey/etc. to (msgs like "hi cat")</h2>
+<div class="chart"></div>
+</div>
 <script>
 var date_labels = {{ date_labels|tojson }};
 var msgs_by_day = {{ msgs_by_day|tojson }};
@@ -160,5 +164,22 @@ c3.generate({
             tick: {format: function(hour) { return hour + ':00'; }}
         }
     }
+});
+c3.generate({
+    bindto: '#hellos .chart',
+    data: {
+        columns: [
+            {% for word, msgs in hellos %}
+            [{{ word|tojson }}, {{ msgs|tojson }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Msgs']}
+    },
+    grid: {
+        focus: {show: false}
+    },
 });
 </script>

@@ -7,8 +7,10 @@ from datetime import datetime, date, timedelta
 import jinja2
 import simplejson as json
 import requests
-from cStringIO import StringIO
+from StringIO import StringIO
 import sys
+import xml.sax.handler
+import re
 
 SKYPE_DB = '/Users/leif/Library/Application Support/Skype/eurleif/main.db'
 CHAT_NAME = '19:78317a8dceb646ff9d62ea2e31b4decb@thread.skype'
@@ -19,6 +21,18 @@ SkypeMessage = namedtuple('SkypeMessage', 'timestamp author message'.split())
 
 template_env = jinja2.Environment(loader=jinja2.PackageLoader('intpstatgen', 'templates'))
 template_env.filters['tojson'] = json.dumps
+
+class TextExtractingContentHandler(xml.sax.handler.ContentHandler):
+    def __init__(self):
+        self.io = StringIO()
+
+    def characters(self, content):
+        self.io.write(content)
+
+def extract_xml_text(data):
+    handler = TextExtractingContentHandler()
+    xml.sax.parseString('<root>%s</root>' % data.encode('utf8'), handler)
+    return handler.io.getvalue()
 
 def open_db():
     with NamedTemporaryFile(delete=False) as f:
@@ -37,7 +51,7 @@ def read_msgs():
         cur.execute('SELECT timestamp, author, body_xml FROM messages WHERE chatname=? ORDER BY timestamp ASC', [CHAT_NAME])
         for timestamp, author, body in cur:
             if body:
-                result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, body))
+                result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, extract_xml_text(body)))
 
     return result
 
@@ -188,6 +202,23 @@ def messages_by_hour(msgs):
         hours[msg.timestamp.hour] += 1
     return hours
 
+def common_words(msgs, n=50):
+    words = {}
+    for msg in msgs:
+        for word in msg.message.split():
+            word = word.lower()
+            words[word] = words.get(word, 0) + 1
+    return sorted(words.iteritems(), key=lambda (k, v): v, reverse=True)[:n]
+
+def words_following_hello(msgs):
+    words = {}
+    for msg in msgs:
+        m = re.search(ur"^.{,6}\b(?:hello|hey|hi+),?\s+([a-z0-9'-]+).{,4}$", msg.message, re.I)
+        if m:
+            word = m.group(1).lower()
+            words[word] = words.get(word, 0) + 1
+    return sorted(words.iteritems(), key=lambda (k, v): v, reverse=True)
+
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
@@ -195,6 +226,7 @@ def generate_page():
     wpm = only_top_authors(words_per_msg(msgs), by_author)
     wpm_overall = wpm[None]
     wpm = sorted(wpm.iteritems(), key=lambda (k, v): v, reverse=True)
+    print words_following_hello(msgs)
     return template_env.get_template('stats.html').render(
         top_authors=top_authors,
         date_labels=date_labels(msgs),
@@ -206,7 +238,8 @@ def generate_page():
         words_per_msg=wpm,
         overall_words_per_msg=wpm_overall,
         days_of_week=messages_by_day_of_week(msgs),
-        hours=messages_by_hour(msgs)
+        hours=messages_by_hour(msgs),
+        hellos=words_following_hello(msgs)[:20],
     )
 
 if __name__ == '__main__':
