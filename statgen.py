@@ -110,7 +110,7 @@ def msgs_by_author(msgs):
         result[msg.author] = result.get(msg.author, 0) + 1
     return result
 
-def only_top_authors(d, by_author, n=15):
+def only_top_authors(d, by_author, n=20):
     top = set(k for k, v in sorted(by_author.iteritems(), key=lambda (k,v): v)[-n:])
     for k in d.keys():
         if k not in top:
@@ -227,7 +227,7 @@ def msgs_matching(msgs, pattern):
             last_counted = True
     return result
 
-def top_msgs_matching(msgs, pattern, n=20):
+def top_msgs_matching(msgs, pattern, n=15):
     return sorted(msgs_matching(msgs, pattern).iteritems(), key=lambda (k,v): v, reverse=True)[:n]
 
 def edit_percentages(msgs):
