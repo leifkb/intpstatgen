@@ -58,6 +58,10 @@ html {
 <h2>Words following hi/hey/etc. (msgs like "hi cat")</h2>
 <div class="chart"></div>
 </div>
+<div id="percent_uppercase">
+<h2>Percent letters uppercase</h2>
+<div class="chart"></div>
+</div>
 <div id="love">
 <h2>Top lovers (msgs mentioning love)</h2>
 <div class="chart"></div>
@@ -395,6 +399,34 @@ c3.generate({
     },
     grid: {
         focus: {show: false}
+    },
+    interaction: {enabled: !is_mobile}
+});
+c3.generate({
+    bindto: '#percent_uppercase .chart',
+    data: {
+        columns: [
+            {% for author, percent in percent_uppercase %}
+            [{{ author|tojson }}, {{ "%0.2f"|format(percent) }}],
+            {% endfor %}
+        ],
+        type: 'bar'
+    },
+    axis: {
+        x: {type: 'category', show: false, categories: ['Percent']},
+        y: {
+            tick: {
+                format: function (x) {
+                    return x + '%';
+                }
+            }
+        }
+    },
+    grid: {
+        focus: {show: false},
+        y: {
+            lines: [{value: {{ edited_overall }}, text: 'Overall average = {{ "%0.2f%%"|format(percent_uppercase_overall) }}'}]
+        }
     },
     interaction: {enabled: !is_mobile}
 });

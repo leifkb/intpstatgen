@@ -272,6 +272,23 @@ def active_days_by_author(msgs):
 def rank_dict(d):
     return sorted(d.iteritems(), key=lambda (k, v): v, reverse=True)
 
+def percent_uppercase(msgs):
+    letter_counts = {}
+    upper_counts = {}
+    for msg in msgs:
+        for char in msg.message:
+            if not char.isalpha():
+                continue
+            letter_counts[None] = letter_counts.get(None, 0) + 1
+            letter_counts[msg.author] = letter_counts.get(msg.author, 0) + 1
+            if char.isupper():
+                upper_counts[None] = upper_counts.get(None, 0) + 1
+                upper_counts[msg.author] = upper_counts.get(msg.author, 0) + 1
+    result = {}
+    for author, letter_count in letter_counts.iteritems():
+        result[author] = 100 * float(upper_counts.get(author, 0)) / letter_count
+    return result
+
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
@@ -282,6 +299,9 @@ def generate_page():
     edited = edit_percentages(msgs)
     edited_overall = edited[None]
     edited = rank_dict(only_top_authors(edited, by_author))
+    pct_uppercase = percent_uppercase(msgs)
+    pct_uppercase_overall = pct_uppercase[None]
+    pct_uppercase = rank_dict(only_top_authors(pct_uppercase, by_author))
     return template_env.get_template('stats.html').render(
         top_authors=top_authors,
         date_labels=date_labels(msgs),
@@ -304,7 +324,9 @@ def generate_page():
         edited=edited,
         edited_overall=edited_overall,
         active_days_by_author=rank_dict(active_days_by_author(msgs))[:15],
-        laughers=top_msgs_matching(msgs, re.compile(ur'\blol([lo]*)\b|\bha[ah]*\b|\brofl\b', re.I))
+        laughers=top_msgs_matching(msgs, re.compile(ur'\blol([lo]*)\b|\bha[ah]*\b|\brofl\b', re.I)),
+        percent_uppercase=pct_uppercase,
+        percent_uppercase_overall=pct_uppercase_overall
     )
 
 if __name__ == '__main__':
