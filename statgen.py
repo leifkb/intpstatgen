@@ -2,7 +2,7 @@ import sqlite3
 from tempfile import NamedTemporaryFile
 import shutil
 import os
-from collections import namedtuple
+from collections import namedtuple, deque
 from datetime import datetime, date, timedelta
 import jinja2
 import simplejson as json
@@ -13,7 +13,7 @@ from xml.sax.saxutils import unescape
 import re
 
 SKYPE_DB = '/Users/leif/Library/Application Support/Skype/eurleif/main.db'
-CHAT_NAME = '19:78317a8dceb646ff9d62ea2e31b4decb@thread.skype'
+CHAT_NAMES = ['19:78317a8dceb646ff9d62ea2e31b4decb@thread.skype', '19:055a809908b6479ca1a0b529023f2612@thread.skype']
 NEOCITIES_USERNAME = 'intpstats'
 NEOCITIES_PASSWORD = sys.argv[1] if len(sys.argv) > 1 else None
 URL = 'http://intpstats.neocities.org'
@@ -41,7 +41,8 @@ def read_msgs():
 
     with open_db() as db:
         cur = db.cursor()
-        cur.execute('SELECT timestamp, author, body_xml, edited_timestamp FROM messages WHERE chatname=? ORDER BY timestamp ASC', [CHAT_NAME])
+        q = '(' + (', '.join('?' for x in CHAT_NAMES)) + ')'
+        cur.execute('SELECT timestamp, author, body_xml, edited_timestamp FROM messages WHERE chatname IN ' + q + ' ORDER BY timestamp ASC', CHAT_NAMES)
         for timestamp, author, body, edit_timestamp in cur:
             if body:
                 result.append(SkypeMessage(datetime.utcfromtimestamp(timestamp), author, extract_xml_text(body), bool(edit_timestamp)))
@@ -307,6 +308,46 @@ def daily_minutes_of_silence(msgs):
             result[-1] -= 1
     return result
 
+def author_pairs(msgs):
+    result = {}
+    last_author = None
+    for msg in msgs:
+        if last_author == msg.author:
+            continue
+        if last_author is None:
+            last_author = msg.author
+            continue
+        pair = ', '.join(sorted((last_author, msg.author)))
+        result[pair] = result.get(pair, 0) + 1
+        last_author = msg.author
+    return result
+
+def peak_messages_per_minute(msgs):
+    result = []
+    last_day = None
+    recent = deque()
+    for msg in msgs:
+        day = msg.timestamp.date()
+        if last_day is None or last_day < day:
+            result.append(0)
+            last_day = day
+        recent.append(msg)
+        while recent:
+            other = recent[0]
+            if msg.timestamp - other.timestamp < timedelta(seconds=60):
+                break
+            recent.popleft()
+        recent_count = 0
+        last_author = None
+        for other in recent:
+            if last_author == other.author:
+                continue
+            last_author = other.author
+            recent_count += 1
+        if recent_count > result[-1]:
+            result[-1] = recent_count
+    return result
+
 def generate_page():
     msgs = read_msgs()
     by_author = msgs_by_author(msgs)
@@ -345,8 +386,11 @@ def generate_page():
         laughers=top_msgs_matching(msgs, re.compile(ur'\blol([lo]*)\b|\bha[ah]*\b|\brofl\b', re.I)),
         percent_uppercase=pct_uppercase,
         percent_uppercase_overall=pct_uppercase_overall,
-        nazis=top_msgs_matching(msgs, re.compile(ur'\bnazi|\bhitler|\bholocaust', re.I)),
-        minutes_of_silence=daily_minutes_of_silence(msgs)
+        nazis=top_msgs_matching(msgs, re.compile(ur'\bnazi|\bhitler|\bholocaust|\bshoah\b', re.I)),
+        minutes_of_silence=daily_minutes_of_silence(msgs),
+        your_mom=top_msgs_matching(msgs, re.compile(ur'\byour\s+mo(m|ther)', re.I)),
+        author_pairs=rank_dict(author_pairs(msgs))[:20],
+        peak_messages_per_minute=peak_messages_per_minute(msgs)
     )
 
 if __name__ == '__main__':

@@ -33,6 +33,15 @@ html {
 <h2>Minutes of silence (no messages) per day</h2>
 <div class="chart"></div>
 </div>
+<div id="msgsperminute">
+<h2>Peak msgs per minute by day</h2>
+<div class="chart"></div>
+</div>
+<div id="authorpairs">
+<h2>Common pairs in conversations</h2>
+<p>Estimates how much different people talk to each other, as measured by how many times their messages follow each other. Order doesn't matter; A replying to B, or B replying to A, both count as "A, B".</p>
+<div class="chart"></div>
+</div>
 <div class="col1">
 <div id="daysofweek">
 <h2>Total messages by day of week</h2>
@@ -64,6 +73,10 @@ html {
 </div>
 <div id="laughers">
 <h2>Top laughers</h2>
+<div class="chart"></div>
+</div>
+<div id="your_mom">
+<h2>People who talk about your mom</h2>
 <div class="chart"></div>
 </div>
 </div>
@@ -108,6 +121,7 @@ var date_labels = {{ date_labels|tojson }};
 var msgs_by_day = {{ msgs_by_day|tojson }};
 var authors_by_day = {{ authors_by_day|tojson }};
 var minutes_of_silence = {{ minutes_of_silence|tojson }};
+var msgsperminute = {{ peak_messages_per_minute|tojson }};
 var is_mobile = /mobile|kindle|silk\/|symbian|nokia|android|nintendobrowser/i.test(navigator.userAgent);
 var drawList = [
     function() {
@@ -176,6 +190,47 @@ var drawList = [
                         format: '%Y-%m-%d'
                     }
                 }
+            },
+            interaction: {enabled: !is_mobile}
+        });
+    },
+    function() {
+        c3.generate({
+            bindto: '#msgsperminute .chart',
+            data: {
+                x: 'x',
+                columns: [
+                    ['x'].concat(date_labels),
+                    ['Msgs'].concat(msgsperminute)
+                ]
+            },
+            axis: {
+                x: {
+                    type: 'timeseries',
+                    tick: {
+                        format: '%Y-%m-%d'
+                    }
+                }
+            },
+            interaction: {enabled: !is_mobile}
+        });
+    },
+    function() {
+        c3.generate({
+            bindto: '#authorpairs .chart',
+            data: {
+                columns: [
+                    {% for authorpair, msgs in author_pairs %}
+                    [{{ authorpair|tojson }}, {{ msgs }}],
+                    {% endfor %}
+                ],
+                type: 'bar'
+            },
+            axis: {
+                x: {type: 'category', show: false, categories: ['Msgs']}
+            },
+            grid: {
+                focus: {show: false}
             },
             interaction: {enabled: !is_mobile}
         });
@@ -324,6 +379,26 @@ var drawList = [
             data: {
                 columns: [
                     {% for author, msgs in laughers %}
+                    [{{ author|tojson }}, {{ msgs }}],
+                    {% endfor %}
+                ],
+                type: 'bar'
+            },
+            axis: {
+                x: {type: 'category', show: false, categories: ['Msgs']}
+            },
+            grid: {
+                focus: {show: false}
+            },
+            interaction: {enabled: !is_mobile}
+        });
+    },
+        function() {
+        c3.generate({
+            bindto: '#your_mom .chart',
+            data: {
+                columns: [
+                    {% for author, msgs in your_mom %}
                     [{{ author|tojson }}, {{ msgs }}],
                     {% endfor %}
                 ],
